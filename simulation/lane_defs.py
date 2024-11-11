@@ -178,6 +178,8 @@ routes = [
     (from_north_bound_node, to_south_bound_node),
 ]
 
+print("Route count:", len(routes))
+
 road_segments = []
 for series in node_series:
     for i in range(len(series) - 1):
