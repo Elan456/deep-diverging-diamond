@@ -7,6 +7,19 @@ class Node:
         self.y = y
         self.light_controlled = light_controlled
 
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+    def __str__(self):
+        return f"Node({self.x}, {self.y})"
+    
+    # define less than
+    def __lt__(self, other):
+        return self.x < other.x or (self.x == other.x and self.y < other.y)
+
     def get_render_x(self):
         return self.x * 50 + 100
     
