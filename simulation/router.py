@@ -136,11 +136,11 @@ class Router:
                 label += "W"
 
             if start in lane_1:
-                label += "-1"
+                label += "1"
             elif start in lane_2:
-                label += "-2"
+                label += "2"
             elif start in lane_3:
-                label += "-3"
+                label += "3"
 
             if start == south_start:
                 label = "S"
@@ -149,6 +149,22 @@ class Router:
 
             text = font.render(label, True, (255, 255, 255))
             screen.blit(text, (start.get_render_x() - 20, start.get_render_y() - 20))
+
+            
+            y = end.get_render_y()
+            x = end.get_render_x() - 20
+
+            if "W" in label:
+                x -= 20
+            if "S" in label:
+                y += 20
+            if "N" in label:
+                y -= 20
+            if "E" in label:
+                x += 20
+
+            text = font.render(f"'{label}", True, (255, 255, 255))
+            screen.blit(text, (x, y))
 
 
 
