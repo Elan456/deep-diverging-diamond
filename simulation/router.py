@@ -10,6 +10,8 @@ from simulation.road_segment import RoadSegment, Node, OccupationSection
 
 from typing import List, Dict, Tuple
 
+from . import lane_defs
+
 class Router:
     def __init__(self, road_segments, routes: List[Tuple[Node, Node]]):
         """
@@ -102,6 +104,57 @@ class Router:
 
         return []
 
+
+    def draw_route_labels(self, screen):
+        """
+        At the beginning of each route, put a text label
+        e.g. E-1 == East-bound lane 1
+        """
+
+        font = pygame.font.Font(None, 36)
+
+        for i, (start, end) in enumerate(self.routes):
+            route = self.full_routes[(start, end)]
+            start = route[0]
+            end = route[-1]
+            
+            # Draw a letter label at start
+            label = ""
+            
+            east_start_x = lane_defs.start_east_bound_lane_1.x
+            west_start_x = lane_defs.start_west_bound_lane_1.x
+            south_start = lane_defs.from_south_bound_node
+            north_start = lane_defs.from_north_bound_node
+
+            lane_1 = [lane_defs.start_east_bound_lane_1, lane_defs.start_west_bound_lane_1]
+            lane_2 = [lane_defs.start_east_bound_lane_2, lane_defs.start_west_bound_lane_2]
+            lane_3 = [lane_defs.start_east_bound_lane_3, lane_defs.start_west_bound_lane_3]
+
+            if start.x == east_start_x:
+                label += "E"
+            elif start.x == west_start_x:
+                label += "W"
+
+            if start in lane_1:
+                label += "-1"
+            elif start in lane_2:
+                label += "-2"
+            elif start in lane_3:
+                label += "-3"
+
+            if start == south_start:
+                label = "S"
+            elif start == north_start:
+                label = "N"
+
+            text = font.render(label, True, (255, 255, 255))
+            screen.blit(text, (start.get_render_x() - 20, start.get_render_y() - 20))
+
+
+
+
+
+
     def draw_routes(self, screen):
         """
         Draw the routes on the screen
@@ -139,4 +192,6 @@ class Router:
         
         pygame.draw.circle(screen, (255, 0, 0),
                             (nodes[-1].get_render_x(), nodes[-1].get_render_y()), 5)
+        
+        self.draw_route_labels(screen)
             

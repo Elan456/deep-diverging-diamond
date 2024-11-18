@@ -1,6 +1,9 @@
 import pygame
 from .ddi import DDI
 
+pygame.init()
+pygame.font.init()
+
 class Simulation:
     def __init__(self, render=False):
         self.render = render
