@@ -3,9 +3,10 @@ Helps cars to live-navigate through the simulation.
 """
 
 import pygame
+import math 
 
 from simulation.car import Car 
-from simulation.road_segment import RoadSegment, Node
+from simulation.road_segment import RoadSegment, Node, OccupationSection
 
 from typing import List, Dict, Tuple
 
@@ -17,14 +18,19 @@ class Router:
         """
         self.routes = routes
         self.road_segments: List[RoadSegment] = road_segments
-        self.full_routes: Dict[Tuple: List[Node]] = {}  # The key is a tuple of the start and end node, the value is a list of nodes 
-        self.cars = []
+        self.full_routes: Dict[Tuple: List[OccupationSection]] = {}  # The key is a tuple of the start and end node, the value is a list of nodes representing each occupation section
 
         self.node_neighbors: Dict[Node, List[Node]] = {}
         self.populate_neighbors()
         self.generate_full_routes()
 
         self.render_tick = 0
+
+    def get_route(self, start: Node, end: Node):
+        """
+        Get the route from start to end
+        """
+        return self.full_routes[(start, end)]
 
     def populate_neighbors(self):
         """
@@ -42,7 +48,26 @@ class Router:
         """
         for start, end in self.routes:
             route = self.find_route(start, end)
-            self.full_routes[(start, end)] = route
+            occupation_sections_route = [
+                OccupationSection(route[0].x, route[0].y)
+            ]
+
+            # The occupation sections should be evenly spaced at 1 unit apart 
+
+            for i in range(1, len(route)):
+                s_start = route[i - 1]
+                s_end = route[i]
+
+                dx = s_end.x - s_start.x
+                dy = s_end.y - s_start.y
+
+                num_sections = int(math.sqrt(dx ** 2 + dy ** 2) * 2)
+
+                for j in range(num_sections):
+                    occupation_sections_route.append(OccupationSection(s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections))
+            occupation_sections_route.append(OccupationSection(route[-1].x, route[-1].y))
+            self.full_routes[(start, end)] = occupation_sections_route
+            
 
         # Sort the routes by start_node
         self.full_routes = dict(sorted(self.full_routes.items(), key=lambda x: x[0][0]))
@@ -77,9 +102,6 @@ class Router:
 
         return []
 
-    def add_car(self, car: Car):
-        self.cars.append(car)
-
     def draw_routes(self, screen):
         """
         Draw the routes on the screen
@@ -95,6 +117,9 @@ class Router:
                 pygame.draw.line(screen, (50, 50, 50),
                                 (nodes[i].get_render_x(), nodes[i].get_render_y()), 
                                 (nodes[i + 1].get_render_x(), nodes[i + 1].get_render_y()), 5)
+                
+                nodes[i].draw(screen)
+                
 
 
         display_route = routes[int(self.render_tick / 100) % len(routes)]
@@ -105,6 +130,8 @@ class Router:
             pygame.draw.line(screen, (0, 100, 0),
                             (nodes[i].get_render_x(), nodes[i].get_render_y()), 
                             (nodes[i + 1].get_render_x(), nodes[i + 1].get_render_y()), 5)
+            
+           
             
         # Draw a green circle at the start and a red circle at the end
         pygame.draw.circle(screen, (0, 255, 0), 

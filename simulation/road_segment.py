@@ -2,10 +2,9 @@ import pygame
 import numpy as np 
 
 class Node:
-    def __init__(self, x, y, light_controlled=False):
+    def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.light_controlled = light_controlled
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
@@ -25,6 +24,77 @@ class Node:
     
     def get_render_y(self):
         return self.y * 50 + 100
+
+class OccupationSection:
+    """
+    An occupation section is a section of the road that exactly one car can occupy (otherwise an accident occurs)
+    These occupation sections are evenly spaced by distance, approx one GridUnit in length
+
+    Situation example: (Z is an occupation section)
+        C
+        |
+    A---Z----B
+        |
+        D
+
+    If a car heading from A to B is in the occupation section, then no other cars heading in that same
+    direction can enter the occupation section until the car leaves it.
+
+    If a car heading from A to B is in the occupation section, a car heading from C to D could enter and
+    cause an accident. This is because we are assuming that cars don't check for cross-traffic, only same-direction traffic.
+
+    i.e. No rear-end collisions, only side-swipes and t-bones
+    
+    Rules:
+    - Don't enter the section if a car heading in the same direction is already in the section
+    - Don't enter the section if it's red lighted
+    - Don't check for cars heading in a perpendicular direction (Assue we don't check for cross-traffic)
+    """
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.occupant = None
+        self.red_light = False
+        self.overlaps = []  # List of other occupation sections that overlap with this one
+
+    def add_overlap(self, other: 'OccupationSection'):
+        self.overlaps.append(other)
+
+    def can_enter(self, car):
+        """
+        Returns true or false if the given car can enter this occupation section
+
+        A cross-traffic car won't trigger a false, only a car heading in the same direction
+        It's the traffic light's job to prevent cross-traffic collisions 
+        """
+
+        # If the light is red, then no one can enter
+        if self.red_light:
+            return False
+
+        # If the section is already occupied, then no one can enter
+        if self.occupant is not None:
+            # Check if the occupant is heading in the same direction
+            if self.occupant.direction == car.direction:
+                return False
+        
+        # Check if any of the overlapping sections are occupied
+        for overlap in self.overlaps:
+            if overlap.occupant is not None and overlap.occupant.direction == car.direction:
+                return False
+            
+        return True
+
+    def get_render_x(self):
+        return self.x * 50 + 100
+    
+    def get_render_y(self):
+        return self.y * 50 + 100
+
+    def draw(self, surface):
+        pygame.draw.rect(surface, (255, 0, 0), (self.x * 50 + 100, self.y * 50 + 100, 25, 25), 1)
+
+
 
 class RoadSegment:
     """

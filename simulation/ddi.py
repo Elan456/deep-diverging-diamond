@@ -5,6 +5,7 @@ import pygame
 from .road_segment import RoadSegment, Node
 from .lane_defs import road_segments, routes
 from .router import Router
+from .car import Car
 
 
 
@@ -13,6 +14,9 @@ from .router import Router
 class DDI:
     def __init__(self):
         self.router = Router(road_segments, routes)
+        self.cars = [
+            Car(self.router, routes[0][0], routes[0][1], 0),
+        ]
 
     def draw(self, screen):
         # Draw the grid of 50x50
@@ -25,3 +29,10 @@ class DDI:
         #     segment.draw(screen)
 
         self.router.draw_routes(screen)
+
+        for car in self.cars:
+            car.draw(screen)
+
+    def update(self):
+        for car in self.cars:
+            car.update()

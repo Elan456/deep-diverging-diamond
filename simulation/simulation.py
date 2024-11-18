@@ -20,6 +20,8 @@ class Simulation:
                     if event.type == pygame.QUIT:
                         self.running = False
 
+                self.ddi.update()
+
                 self.screen.fill((128, 128, 128))
                 self.ddi.draw(self.screen)
                 pygame.display.flip()
