@@ -28,4 +28,4 @@ class Simulation:
                 self.screen.fill((128, 128, 128))
                 self.ddi.draw(self.screen)
                 pygame.display.flip()
-                self.clock.tick(60)
+                self.clock.tick(5)

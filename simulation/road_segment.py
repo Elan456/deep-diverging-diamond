@@ -31,11 +31,11 @@ class OccupationSection:
     These occupation sections are evenly spaced by distance, approx one GridUnit in length
 
     Situation example: (Z is an occupation section)
-        C
-        |
-    A---Z----B
-        |
-        D
+         C
+         |
+    A----Z----B
+         |
+         D
 
     If a car heading from A to B is in the occupation section, then no other cars heading in that same
     direction can enter the occupation section until the car leaves it.
@@ -74,8 +74,8 @@ class OccupationSection:
 
         # If the section is already occupied, then no one can enter
         if self.occupant is not None:
-            # Check if the occupant is heading in the same direction
-            if self.occupant.direction == car.direction:
+            # Check if the occupant and the car's directions are within 60 degrees of each other (merging or same direction)
+            if np.dot(self.occupant.facing_direction, car.facing_direction) < 0.5:
                 return False
         
         # Check if any of the overlapping sections are occupied

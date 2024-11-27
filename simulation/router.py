@@ -22,6 +22,8 @@ class Router:
         self.road_segments: List[RoadSegment] = road_segments
         self.full_routes: Dict[Tuple: List[OccupationSection]] = {}  # The key is a tuple of the start and end node, the value is a list of nodes representing each occupation section
 
+        self.all_occupation_sections = []
+
         self.node_neighbors: Dict[Node, List[Node]] = {}
         self.populate_neighbors()
         self.generate_full_routes()
@@ -69,6 +71,9 @@ class Router:
                     occupation_sections_route.append(OccupationSection(s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections))
             occupation_sections_route.append(OccupationSection(route[-1].x, route[-1].y))
             self.full_routes[(start, end)] = occupation_sections_route
+
+            for os in occupation_sections_route:
+                self.all_occupation_sections.append(os)
             
 
         # Sort the routes by start_node
