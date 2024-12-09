@@ -2,5 +2,5 @@ from simulation.simulation import Simulation
 
 
 if __name__ == "__main__":
-    sim = Simulation(render=True)
+    sim = Simulation("./simulation/sim_defs/sim1.csv", render=True)
     sim.run()

@@ -15,13 +15,13 @@ class Car:
         self.facing_direction = [0, 0]  # The direction the car is facing
         self.current_node = start_node
 
-        
-
         self.route = self.router.get_route(start_node, end_node)  # List of nodes to drive to
         self.route_index = 0  # The index of the current node in the route we are on.
+        self.ending_tick = 0
 
     def finish(self):
         self.done = True 
+        self.ending_tick = self.tick
         # Remove myself from the occupation map
         if self.ddi.occupations[(self.current_node.x, self.current_node.y)].occupant == self:
             self.ddi.occupations[(self.current_node.x, self.current_node.y)].occupant = None
