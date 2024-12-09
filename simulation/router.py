@@ -50,25 +50,34 @@ class Router:
         """
         For every start, end pair, find the list of nodes that make up the route
         """
+        lights = [
+            (1.0, 5.0), (1.0, 6.0), (1.0, 7.0), 
+            (11.0, 2.0), (11.0, 3.0), (11.0, 4.0),
+            (8, 2), (8, 3), (8, 4),
+            (4, 6), (4, 7), (4, 8),
+        ]
+        # lights = [(1.375, 4.625), (1.375, 5.625), (1.375, 6.625)]
         for start, end in self.routes:
             route = self.find_route(start, end)
             occupation_sections_route = [
                 OccupationSection(route[0].x, route[0].y)
             ]
-
             # The occupation sections should be evenly spaced at 1 unit apart 
-
             for i in range(1, len(route)):
                 s_start = route[i - 1]
                 s_end = route[i]
 
                 dx = s_end.x - s_start.x
                 dy = s_end.y - s_start.y
-
+                
                 num_sections = int(math.sqrt(dx ** 2 + dy ** 2) * 2)
-
+                
                 for j in range(num_sections):
-                    occupation_sections_route.append(OccupationSection(s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections))
+                    section = OccupationSection(s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections)
+                    if (s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections) in lights:
+                        # If its a light, make it a light
+                        section.makeLight()
+                    occupation_sections_route.append(section)
             occupation_sections_route.append(OccupationSection(route[-1].x, route[-1].y))
             self.full_routes[(start, end)] = occupation_sections_route
 
