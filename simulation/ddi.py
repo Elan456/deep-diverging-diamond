@@ -10,6 +10,8 @@ from .router import Router
 from .car import Car
 import csv
 
+block_font = pygame.font.Font(None, 36)
+
 class DDI:
     def __init__(self, scenario):
         print("Scenario: ", scenario)
@@ -50,11 +52,15 @@ class DDI:
                 pygame.draw.rect(screen, (0, 255, 0), (801, 101 + i * 50, 48, 48))
             elif light_states[i] == 0:
                 pygame.draw.rect(screen, (255, 0, 0), (801, 101 + i * 50, 48, 48))
+
+            # Draw the number to the right of the blocks
+            text = block_font.render(str(i), True, (255, 255, 255))
+            screen.blit(text, (870, 100 + i * 50 + 10))
+
         # Draw labels
-        font = pygame.font.Font(None, 36)
-        text = font.render("Plates", True, (255, 255, 255))
+        text = block_font.render("Plates", True, (255, 255, 255))
         screen.blit(text, (700, 50))
-        text = font.render("Light", True, (255, 255, 255))
+        text = block_font.render("Light", True, (255, 255, 255))
         screen.blit(text, (850, 50))
 
     def get_induction_plate_states(self):

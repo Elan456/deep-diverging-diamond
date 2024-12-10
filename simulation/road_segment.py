@@ -2,6 +2,9 @@ import pygame
 import numpy as np 
 from .utils import angle_difference
 
+if not pygame.font.get_init():
+    pygame.font.init()
+
 class Node:
     def __init__(self, x, y):
         self.x = x
@@ -52,6 +55,8 @@ class OccupationSection:
     - Don't check for cars heading in a perpendicular direction (Assue we don't check for cross-traffic)
     """
     width = 12
+
+    font = pygame.font.Font(None, 18)
 
     def __init__(self, x, y, ddi):
         self.x = x
@@ -113,13 +118,17 @@ class OccupationSection:
 
     def draw(self, surface):
         if self.is_light:
-            pygame.draw.rect(surface, (0, 255, 0), (self.x * 50 + 100, self.y * 50 + 100, self.width, self.width), 1)
-        else:
-            pygame.draw.rect(surface, (255, 0, 0), (self.x * 50 + 100, self.y * 50 + 100, self.width, self.width), 1)
+            color = (0, 255, 0) if self.ddi.light_states[self.light_index] == 1 else (255, 0, 0)
+            pygame.draw.rect(surface, color, (self.x * 50 + 100, self.y * 50 + 100, self.width, self.width), 1)
+            # Draw the number in the center
+            text = self.font.render(str(self.light_index), True, (255, 255, 255))
+            surface.blit(text, (self.x * 50 + 100 + 2, self.y * 50 + 100 + 2))
+        # else:
+        #     pygame.draw.rect(surface, (255, 0, 0), (self.x * 50 + 100, self.y * 50 + 100, self.width, self.width), 1)
 
-        for overlap in self.overlaps:
-            # Draw a big circle on the overlap
-            pygame.draw.circle(surface, (255, 255, 0), (overlap.x * 50 + 100 + 12, overlap.y * 50 + 100 + 12), 5)
+        # for overlap in self.overlaps:
+        #     # Draw a big circle on the overlap
+        #     pygame.draw.circle(surface, (255, 255, 0), (overlap.x * 50 + 100 + 12, overlap.y * 50 + 100 + 12), 5)
 
     def make_light(self, light_index):
         self.light_index = light_index

@@ -79,8 +79,8 @@ class Car:
     def draw(self, surface):
         draw_x = self.current_node.get_render_x()
         draw_y = self.current_node.get_render_y()
-        length = 24
-        width = 2
+        length = 30
+        width = 3
         explosion_radius = 20
 
         if self.is_active:

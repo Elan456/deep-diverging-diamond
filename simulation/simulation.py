@@ -9,13 +9,14 @@ pygame.font.init()
 class Simulation:
 
     class State:
-        def __init__(self, induction_plate_states, crash_occurred):
+        def __init__(self, current_induction_plate_states, induction_plate_last_activated, crash_occurred):
             """
             Params:
             induction_plate_states: List of 1s and 0s representing the state of the induction plates
             crash_occurred: Boolean representing if a crash occurred during this tick 
             """
-            self.induction_plate_states = induction_plate_states
+            self.current_induction_plate_states = current_induction_plate_states
+            self.induction_plate_last_activated = induction_plate_last_activated
             self.crash_occurred = crash_occurred
 
     @staticmethod
@@ -44,6 +45,7 @@ class Simulation:
 
         self.ddi = None
         self.scenario = None # A list of cars and their spawn times
+        self.induction_times = [] # A list of times for how many ticks ago the induction plates were triggered, 0 means something is on it, 100 means never triggered
 
     def set_scenario(self, cars=None, inputFile=None):
         """
@@ -68,6 +70,7 @@ class Simulation:
         Keeping the current scenario, reset the simulation
         """
         self.ddi = DDI(self.scenario)
+        self.induction_times = [100] * 12
 
     def step(self):
         """
@@ -77,6 +80,13 @@ class Simulation:
         if self.ddi.is_done():
             self.running = False
 
+        induction_plate_states = self.ddi.get_induction_plate_states()
+        for i in range(12):
+            if induction_plate_states[i] == 1:
+                self.induction_times[i] = 0
+            else:
+                self.induction_times[i] += 1
+
     def get_state(self) -> List[int]:
         """
         Returns the current state vector of the simulation
@@ -85,7 +95,7 @@ class Simulation:
         """
         induction_plate_states = self.ddi.get_induction_plates_states()
         crash_occurred = self.ddi.get_crash_just_occurred()
-        return self.State(induction_plate_states, crash_occurred)
+        return self.State(induction_plate_states, self.induction_times, crash_occurred)
     
     def apply_action(self, action: List[int]):
         """
@@ -108,16 +118,16 @@ class Simulation:
                         if event.key == pygame.K_SPACE:
                             paused = not paused
                         if event.key == pygame.K_RIGHT and paused:
-                            self.ddi.update()
+                            self.step()
                     # If they click on a light, toggle it
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         x, y = pygame.mouse.get_pos()
-                        if x > 800 and x < 850:
+                        if x > 800 and x < 850 and y > 100 and y < 700:
                             light_index = (y - 100) // 50
                             self.ddi.light_states[light_index] = 1 if self.ddi.light_states[light_index] == 0 else 0
                         
                 if not paused:
-                    self.ddi.update()
+                    self.step()
 
                 self.screen.fill((128, 128, 128))
                 self.ddi.draw(self.screen)

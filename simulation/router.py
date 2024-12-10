@@ -67,7 +67,7 @@ class Router:
                 dx = s_end.x - s_start.x
                 dy = s_end.y - s_start.y
                 
-                num_sections = int(math.sqrt(dx ** 2 + dy ** 2) * 4)  # 4 section per unit of distance
+                num_sections = int(math.sqrt(dx ** 2 + dy ** 2) * 2)  # 4 section per unit of distance
                 for j in range(num_sections):
                     x = s_start.x + dx * j / num_sections
                     y = s_start.y + dy * j / num_sections
@@ -202,7 +202,7 @@ class Router:
             nodes = self.full_routes[route]
 
             for i in range(len(nodes) - 1):
-                pygame.draw.line(screen, (50, 50, 50),
+                pygame.draw.line(screen, (150, 150, 150),
                                 (nodes[i].get_render_x(), nodes[i].get_render_y()), 
                                 (nodes[i + 1].get_render_x(), nodes[i + 1].get_render_y()), 5)
                 # Draw the occupation zone
