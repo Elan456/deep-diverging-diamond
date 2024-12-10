@@ -55,6 +55,7 @@ class OccupationSection:
         self.y = y
         self.occupant = None
         self.red_light = False
+        self.is_light = False
         self.overlaps = []  # List of other occupation sections that overlap with this one
 
     def add_overlap(self, other: 'OccupationSection'):
@@ -69,7 +70,7 @@ class OccupationSection:
         """
 
         # If the light is red, then no one can enter
-        if self.red_light:
+        if self.is_light and self.red_light:
             return False
 
         # If the section is already occupied, then no one can enter
@@ -93,6 +94,13 @@ class OccupationSection:
 
     def draw(self, surface):
         pygame.draw.rect(surface, (255, 0, 0), (self.x * 50 + 100, self.y * 50 + 100, 25, 25), 1)
+    
+    def toggle_light(self):
+        if self.is_light:
+            self.red_light = not self.red_light
+
+    def makeLight(self):
+        self.is_light = True
 
 
 
