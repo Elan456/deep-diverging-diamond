@@ -102,6 +102,21 @@ class DDI:
     
     def is_done(self):
         return len(self.cars) == 0
+
+    def get_average_time(self):
+        """
+        Returns the average time a car took to finish the simulation
+        """
+        total_time = 0
+        car_count = 0
+        for car in self.all_cars:
+            car_count += 1
+            if car.done:
+                total_time += car.ending_tick - car.spawn_tick
+            if car.crashed or not car.done:
+                total_time += 10000  # Penalize cars that didn't finish
+
+        return total_time / car_count
     
     def final_stats(self):
         print("Simulation finished")

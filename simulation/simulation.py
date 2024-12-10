@@ -9,15 +9,16 @@ pygame.font.init()
 class Simulation:
 
     class State:
-        def __init__(self, current_induction_plate_states, induction_plate_last_activated, crash_occurred):
-            """
-            Params:
-            induction_plate_states: List of 1s and 0s representing the state of the induction plates
-            crash_occurred: Boolean representing if a crash occurred during this tick 
-            """
-            self.current_induction_plate_states = current_induction_plate_states
-            self.induction_plate_last_activated = induction_plate_last_activated
-            self.crash_occurred = crash_occurred
+        def __init__(self, current_tick, current_induction_plate_states,
+                      induction_plate_last_activated,
+                        crash_occurred,
+                        all_cars_done):
+
+            self.current_tick = current_tick  # The current tick of the simulation
+            self.current_induction_plate_states = current_induction_plate_states  # A list of 1s and 0s representing if each induction plate is occupied or not
+            self.induction_plate_last_activated = induction_plate_last_activated  # A list of how many ticks ago the induction plates were last activated
+            self.crash_occurred = crash_occurred  # Did a crash occur this tick?
+            self.all_cars_done = all_cars_done  # Are all the cars done?
 
     @staticmethod
     def read_input_file(inputFile):
@@ -46,6 +47,7 @@ class Simulation:
         self.ddi = None
         self.scenario = None # A list of cars and their spawn times
         self.induction_times = [] # A list of times for how many ticks ago the induction plates were triggered, 0 means something is on it, 100 means never triggered
+        self.tick = 0 
 
     def set_scenario(self, cars=None, inputFile=None):
         """
@@ -71,11 +73,13 @@ class Simulation:
         """
         self.ddi = DDI(self.scenario)
         self.induction_times = [100] * 12
+        self.tick = 0
 
     def step(self):
         """
         Steps the simulation forward one tick
         """
+        self.tick += 1
         self.ddi.update()
         if self.ddi.is_done():
             self.running = False
@@ -95,7 +99,15 @@ class Simulation:
         """
         induction_plate_states = self.ddi.get_induction_plates_states()
         crash_occurred = self.ddi.get_crash_just_occurred()
-        return self.State(induction_plate_states, self.induction_times, crash_occurred)
+        return self.State(self.current_tick, 
+            induction_plate_states,
+              self.induction_times, crash_occurred, self.ddi.is_done())
+
+    def get_average_time(self):
+        """
+        Returns the average time a car took to finish the simulation
+        """
+        return self.ddi.get_average_time()
     
     def apply_action(self, action: List[int]):
         """
@@ -128,6 +140,7 @@ class Simulation:
                         
                 if not paused:
                     self.step()
+                    print(self.get_average_time())
 
                 self.screen.fill((128, 128, 128))
                 self.ddi.draw(self.screen)
