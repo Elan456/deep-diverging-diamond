@@ -153,29 +153,29 @@ node_series = [
 # A route is defined as the starting node and the ending node
 routes = [
     # Starting from east-bound (5 of these)
-    (start_east_bound_lane_1, to_north_bound_node),
-    (start_east_bound_lane_1, end_east_bound_lane_1),
-    (start_east_bound_lane_2, end_east_bound_lane_2),
-    (start_east_bound_lane_3, to_south_bound_node),
-    (start_east_bound_lane_3, end_east_bound_lane_3),
+    (start_east_bound_lane_1, to_north_bound_node),  # 0
+    (start_east_bound_lane_1, end_east_bound_lane_1), # 1
+    (start_east_bound_lane_2, end_east_bound_lane_2), # 2
+    (start_east_bound_lane_3, to_south_bound_node), # 3
+    (start_east_bound_lane_3, end_east_bound_lane_3), # 4
 
     # Starting from west-bound (5 of these)
-    (start_west_bound_lane_1, to_north_bound_node),
-    (start_west_bound_lane_1, end_west_bound_lane_1),
-    (start_west_bound_lane_2, end_west_bound_lane_2),
-    (start_west_bound_lane_3, to_south_bound_node),
-    (start_west_bound_lane_3, end_west_bound_lane_3),
+    (start_west_bound_lane_1, to_north_bound_node), # 5
+    (start_west_bound_lane_1, end_west_bound_lane_1), # 6
+    (start_west_bound_lane_2, end_west_bound_lane_2), # 7
+    (start_west_bound_lane_3, to_south_bound_node),  # 8
+    (start_west_bound_lane_3, end_west_bound_lane_3),  # 9
 
     # Starting from south-bound (3 of these)
-    (from_south_bound_node, end_west_bound_lane_1),
-    (from_south_bound_node, end_east_bound_lane_1),
-    (from_south_bound_node, to_north_bound_node),
+    (from_south_bound_node, end_west_bound_lane_1), # 10
+    (from_south_bound_node, end_east_bound_lane_1),  # 11
+    (from_south_bound_node, to_north_bound_node), # 12
 
 
     # Starting from north-bound (3 of these)
-    (from_north_bound_node, end_west_bound_lane_3),
-    (from_north_bound_node, end_east_bound_lane_3),
-    (from_north_bound_node, to_south_bound_node),
+    (from_north_bound_node, end_west_bound_lane_3), # 13
+    (from_north_bound_node, end_east_bound_lane_3), # 14
+    (from_north_bound_node, to_south_bound_node), # 15
 ]
 
 print("Route count:", len(routes))
