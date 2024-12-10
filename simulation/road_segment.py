@@ -53,9 +53,10 @@ class OccupationSection:
     """
     width = 12
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, ddi):
         self.x = x
         self.y = y
+        self.ddi = ddi
         self.occupant = None
         self.red_light = False
         self.is_light = False
@@ -73,7 +74,7 @@ class OccupationSection:
         """
 
         # If the light is red, then no one can enter
-        if self.is_light and self.red_light:
+        if self.is_light and self.ddi.light_states[self.light_index] == 0:
             return False
 
         # If the section is already occupied, then no one can enter
@@ -93,12 +94,16 @@ class OccupationSection:
             return
         
         # Check if any of the overlapping sections are occupied
+        crash_occurred = False
         for overlap in self.overlaps:
             if overlap.occupant is not None:
                 if angle_difference(overlap.occupant.facing_angle, self.occupant.facing_angle) == 90:
                     print("CRASH")
                     self.occupant.crash(overlap.occupant)
                     overlap.occupant.crash(self.occupant)
+                    crash_occurred = True
+
+        return crash_occurred
 
     def get_render_x(self):
         return self.x * 50 + 100
@@ -115,12 +120,9 @@ class OccupationSection:
         for overlap in self.overlaps:
             # Draw a big circle on the overlap
             pygame.draw.circle(surface, (255, 255, 0), (overlap.x * 50 + 100 + 12, overlap.y * 50 + 100 + 12), 5)
-    
-    def toggle_light(self):
-        if self.is_light:
-            self.red_light = not self.red_light
 
-    def makeLight(self):
+    def make_light(self, light_index):
+        self.light_index = light_index
         self.is_light = True
 
 

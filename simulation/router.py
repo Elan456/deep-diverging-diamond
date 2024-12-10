@@ -11,13 +11,16 @@ from simulation.road_segment import RoadSegment, Node, OccupationSection
 from typing import List, Dict, Tuple
 
 from . import lane_defs
+from .lane_defs import LIGHTS
+
 
 class Router:
-    def __init__(self, road_segments, routes: List[Tuple[Node, Node]]):
+    def __init__(self, ddi, road_segments, routes: List[Tuple[Node, Node]]):
         """
         :param road_segments: List of RoadSegment objects
         :param routes: List of tuples, where each tuple is a start and end node
         """
+        self.ddi = ddi
         self.routes = routes
         self.road_segments: List[RoadSegment] = road_segments
         self.full_routes: Dict[Tuple: List[OccupationSection]] = {}  # The key is a tuple of the start and end node, the value is a list of nodes representing each occupation section
@@ -50,17 +53,11 @@ class Router:
         """
         For every start, end pair, find the list of nodes that make up the route
         """
-        lights = [
-            (1.0, 5.0), (1.0, 6.0), (1.0, 7.0), 
-            (11.0, 2.0), (11.0, 3.0), (11.0, 4.0),
-            (8.0, 2.0), (8.0, 3.0), (8.0, 4.0),
-            (4.0, 5.0), (4.0, 6.0), (4.0, 7.0),
-        ]
         # lights = [(1.375, 4.625), (1.375, 5.625), (1.375, 6.625)]
         for start, end in self.routes:
             route = self.find_route(start, end)
             occupation_sections_route = [
-                OccupationSection(route[0].x, route[0].y)
+                OccupationSection(route[0].x, route[0].y, self.ddi)
             ]
             # The occupation sections should be evenly spaced at 1 unit apart 
             for i in range(1, len(route)):
@@ -72,12 +69,14 @@ class Router:
                 
                 num_sections = int(math.sqrt(dx ** 2 + dy ** 2) * 4)  # 4 section per unit of distance
                 for j in range(num_sections):
-                    section = OccupationSection(s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections)
-                    if (s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections) in lights:
+                    x = s_start.x + dx * j / num_sections
+                    y = s_start.y + dy * j / num_sections
+                    section = OccupationSection(x, y, self.ddi)
+                    if (x, y) in LIGHTS:
                         # If its a light, make it a light
-                        section.makeLight()
+                        section.make_light(LIGHTS.index((x, y)))
                     occupation_sections_route.append(section)
-            occupation_sections_route.append(OccupationSection(route[-1].x, route[-1].y))
+            occupation_sections_route.append(OccupationSection(route[-1].x, route[-1].y, self.ddi))
             self.full_routes[(start, end)] = occupation_sections_route
 
             for os in occupation_sections_route:

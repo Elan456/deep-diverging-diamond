@@ -11,28 +11,21 @@ from .car import Car
 import csv
 
 class DDI:
-    def __init__(self, inputFile):
-        self.router = Router(road_segments, routes)
+    def __init__(self, scenario):
+        print("Scenario: ", scenario)
+        self.router = Router(self, road_segments, routes)
         self.cars = []
-        if inputFile:
-            with open(inputFile, newline='') as csvfile:
-                reader = csv.reader(csvfile)
-                for row in reader:
-                    # Skip empty rows
-                    if not row[0] or not row[1]:
-                        continue
-                    self.cars.append(Car(self.router, routes[int(row[0])][0], routes[int(row[0])][1], int(row[1]), self))
-        else:
-            self.cars = [
-                Car(self.router, routes[0][0], routes[0][1], 0, self),
-                Car(self.router, routes[0][0], routes[0][1], 1, self),
-                Car(self.router, routes[0][0], routes[0][1], 1, self),
-                Car(self.router, ld.from_south_bound_node, ld.end_east_bound_lane_1, 5, self)
-            ]
+        for s_car in scenario:  # s_car is a tuple of (route index, start time)
+            self.cars.append(Car(self.router, routes[int(s_car[0])][0], routes[int(s_car[0])][1], int(s_car[1]), self))
+
         self.occupations = {}  # Map of location (x,y) : occupation section
         for os in self.router.all_occupation_sections:
             self.occupations[(os.x, os.y)] = os 
         self.all_cars = self.cars.copy()
+
+        self.crash_just_occurred = False # Updated every tick to see if a crash just occurred
+
+        self.light_states = [0] * 12  # 0 is red, 1 is green
 
     def draw(self, screen):
         # Draw the grid of 50x50
@@ -44,21 +37,60 @@ class DDI:
 
         for car in self.cars:
             car.draw(screen)
-    def toggle_lights(self):
-        for os in self.router.all_occupation_sections:
-            pass
-            # if os.is_light:
-            #     if bool(random.getrandbits(1)):
-            #         os.toggle_light()
+
+        # Draw a list of 1 and 0s vertically for the induction plates, and another next to it for the light states
+        induction_plate_states = self.get_induction_plate_states()
+        light_states = self.light_states
+        for i in range(12):
+            pygame.draw.rect(screen, (255, 255, 255), (750, 100 + i * 50, 50, 50), 1)
+            pygame.draw.rect(screen, (255, 255, 255), (800, 100 + i * 50, 50, 50), 1)
+            if induction_plate_states[i] == 1:
+                pygame.draw.rect(screen, (0, 0, 0), (751, 101 + i * 50, 48, 48))
+            if light_states[i] == 1:
+                pygame.draw.rect(screen, (0, 255, 0), (801, 101 + i * 50, 48, 48))
+            elif light_states[i] == 0:
+                pygame.draw.rect(screen, (255, 0, 0), (801, 101 + i * 50, 48, 48))
+        # Draw labels
+        font = pygame.font.Font(None, 36)
+        text = font.render("Plates", True, (255, 255, 255))
+        screen.blit(text, (700, 50))
+        text = font.render("Light", True, (255, 255, 255))
+        screen.blit(text, (850, 50))
+
+    def get_induction_plate_states(self):
+        """
+        Returns a list of 1 and 0s representing if each induction plate is occupied or not 
+        """
+        induction_plate_states = [0] * 12
+
+        # Check if a car is waiting at a light, if so, set the induction plate corresponding to that light to 1
+        for car in self.cars:
+            if car.at_light:
+                induction_plate_states[ld.LIGHTS.index((car.next_node.x, car.next_node.y))] = 1
+
+        return induction_plate_states\
+        
+    def get_crash_just_occurred(self):
+        """
+        Did a crash occur this tick?
+        """
+        return self.crash_just_occurred
+
+    def set_light_states(self, light_states):
+        """
+        Set the light states to the given list of 1s and 0s of length 12
+        """
+        self.light_states = light_states
 
     def update(self):
         for car in self.cars:
             car.update()
         
+        self.crash_just_occurred = False
         for os in self.router.all_occupation_sections:
-            os.check_collision()
+            if os.check_collision():
+                self.crash_just_occurred = True
 
-        self.toggle_lights()
         # Cull cars that are done
         self.cars = [car for car in self.cars if not car.done]
     

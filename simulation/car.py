@@ -20,7 +20,9 @@ class Car:
         self.route_index = 0  # The index of the current node in the route we are on.
         self.ending_tick = 0
         self.crashed = False 
-        self.other = None
+        self.other = None  
+
+        self.at_light = False # If I'm one os away from a light, must be updated every .update()
 
     def crash(self, other=None):
         """
@@ -54,6 +56,8 @@ class Car:
             return
 
         self.next_node = self.route[self.route_index + 1]
+
+        self.at_light = self.next_node.is_light
 
         self.facing_direction = [self.next_node.x - self.current_node.x, self.next_node.y - self.current_node.y]
         angle_deg = math.degrees(math.atan2(self.facing_direction[1], self.facing_direction[0]))
