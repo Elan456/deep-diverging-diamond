@@ -11,20 +11,21 @@ class Car:
         self.end_node = end_node
         self.is_active = False
         self.done = False
-
-        self.facing_direction = [0, 0]  # The direction the car is facing
+        self.facing_direction = [0, 0] # The direction the car is facing
+        self.facing_angle = 0  # The angle the car is facing
         self.current_node = start_node
 
         self.route = self.router.get_route(start_node, end_node)  # List of nodes to drive to
         self.route_index = 0  # The index of the current node in the route we are on.
         self.ending_tick = 0
 
-    def finish(self):
+    def finish(self, crash=False):
         self.done = True 
-        self.ending_tick = self.tick
+        self.ending_tick = self.tick if not crash else math.inf
         # Remove myself from the occupation map
         if self.ddi.occupations[(self.current_node.x, self.current_node.y)].occupant == self:
             self.ddi.occupations[(self.current_node.x, self.current_node.y)].occupant = None
+    
 
     def update(self):
         """
@@ -41,7 +42,8 @@ class Car:
         self.next_node = self.route[self.route_index + 1]
 
         self.facing_direction = [self.next_node.x - self.current_node.x, self.next_node.y - self.current_node.y]
-
+        angle_deg = math.degrees(math.atan2(self.facing_direction[1], self.facing_direction[0]))
+        self.facing_angle = (360 - angle_deg) % 360
         # If I'm not active yet, check if I should be
         if not self.is_active:
             if self.tick >= self.spawn_tick:
