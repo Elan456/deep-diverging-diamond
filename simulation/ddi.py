@@ -43,9 +43,10 @@ class DDI:
             car.draw(screen)
     def toggle_lights(self):
         for os in self.router.all_occupation_sections:
-            if os.is_light:
-                if bool(random.getrandbits(1)):
-                    os.toggle_light()
+            pass
+            # if os.is_light:
+            #     if bool(random.getrandbits(1)):
+            #         os.toggle_light()
 
     def update(self):
         for car in self.cars:

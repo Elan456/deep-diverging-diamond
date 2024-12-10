@@ -73,16 +73,26 @@ class OccupationSection:
         if self.is_light and self.red_light:
             return False
 
+        def angle_difference(angle1, angle2):
+            diff = abs(angle1 - angle2)
+            return min(diff, 360 - diff)
+
         # If the section is already occupied, then no one can enter
         if self.occupant is not None:
             # Check if the occupant and the car's directions are within 60 degrees of each other (merging or same direction)
-            if np.dot(self.occupant.facing_direction, car.facing_direction) < 0.5:
+            if angle_difference(self.occupant.facing_angle, car.facing_angle) != 90:
                 return False
+
         
         # Check if any of the overlapping sections are occupied
         for overlap in self.overlaps:
-            if overlap.occupant is not None and overlap.occupant.direction == car.direction:
-                return False
+            if overlap.occupant is not None:
+                if angle_difference(overlap.occupant.facing_angle, car.facing_angle) == 90:
+                    print("CRASH")
+                    car.finish(True)
+                    overlap.occupant.finish(True)
+                    return False
+
             
         return True
 
@@ -93,7 +103,10 @@ class OccupationSection:
         return self.y * 50 + 100
 
     def draw(self, surface):
-        pygame.draw.rect(surface, (255, 0, 0), (self.x * 50 + 100, self.y * 50 + 100, 25, 25), 1)
+        if self.is_light:
+            pygame.draw.rect(surface, (0, 255, 0), (self.x * 50 + 100, self.y * 50 + 100, 25, 25), 1)
+        else:
+            pygame.draw.rect(surface, (255, 0, 0), (self.x * 50 + 100, self.y * 50 + 100, 25, 25), 1)
     
     def toggle_light(self):
         if self.is_light:

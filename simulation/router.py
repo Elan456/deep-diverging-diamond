@@ -53,8 +53,8 @@ class Router:
         lights = [
             (1.0, 5.0), (1.0, 6.0), (1.0, 7.0), 
             (11.0, 2.0), (11.0, 3.0), (11.0, 4.0),
-            (8, 2), (8, 3), (8, 4),
-            (4, 6), (4, 7), (4, 8),
+            (8.0, 2.0), (8.0, 3.0), (8.0, 4.0),
+            (4.0, 5.0), (4.0, 6.0), (4.0, 7.0),
         ]
         # lights = [(1.375, 4.625), (1.375, 5.625), (1.375, 6.625)]
         for start, end in self.routes:
@@ -71,7 +71,6 @@ class Router:
                 dy = s_end.y - s_start.y
                 
                 num_sections = int(math.sqrt(dx ** 2 + dy ** 2) * 2)
-                
                 for j in range(num_sections):
                     section = OccupationSection(s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections)
                     if (s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections) in lights:
@@ -87,6 +86,18 @@ class Router:
 
         # Sort the routes by start_node
         self.full_routes = dict(sorted(self.full_routes.items(), key=lambda x: x[0][0]))
+        # Check for overlapping sections between different routes
+        for key1, sections1 in self.full_routes.items():
+            for key2, sections2 in self.full_routes.items():
+                if key1 != key2:
+                    for section1 in sections1:
+                        for section2 in sections2:
+                            rect1 = pygame.Rect(section1.x * 50 + 100, section1.y * 50 + 100, 25, 25)
+                            rect2 = pygame.Rect(section2.x * 50 + 100, section2.y * 50 + 100, 25, 25)
+                            if rect1.colliderect(rect2):
+                                section1.add_overlap(section2)
+                                section2.add_overlap(section1)
+
 
     def find_route(self, start: Node, end: Node) -> List[Node]:
         """
