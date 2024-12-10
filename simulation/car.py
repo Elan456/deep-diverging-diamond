@@ -33,7 +33,7 @@ class Car:
 
     def finish(self):
         self.done = True 
-        self.ending_tick = self.tick if not self.crashed else math.inf
+        self.ending_tick = self.tick
         # Remove myself from the occupation map
         if self.ddi.occupations[(self.current_node.x, self.current_node.y)].occupant == self:
             self.ddi.occupations[(self.current_node.x, self.current_node.y)].occupant = None

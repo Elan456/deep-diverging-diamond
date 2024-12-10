@@ -119,14 +119,6 @@ class DDI:
         return total_time / car_count
     
     def final_stats(self):
-        print("Simulation finished")
-        print("Final stats:")
-        car_count = 0
-        running_average = 0
-        for car in self.all_cars:
-            running_average = running_average * .8 + (car.ending_tick - car.spawn_tick) * .2
-            car_count += 1
-            # print(f"Car {car_count} took {car.ending_tick - car.spawn_tick} ticks to finish")
-        print(f"Average time to finish: {running_average}")
+        print("Final average time: ", self.get_average_time())
 
         
