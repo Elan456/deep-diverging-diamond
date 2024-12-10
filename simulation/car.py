@@ -1,5 +1,6 @@
 import pygame 
 import math 
+from .utils import draw_line_as_polygon
 
 class Car:
     def __init__(self, router, start_node, end_node, spawn_tick, ddi):
@@ -19,9 +20,14 @@ class Car:
         self.route_index = 0  # The index of the current node in the route we are on.
         self.ending_tick = 0
         self.crashed = False 
+        self.other = None
 
-    def crash(self):
+    def crash(self, other=None):
+        """
+        Other is the other car that I crashed into
+        """
         self.crashed = True 
+        self.other = other
 
     def finish(self):
         self.done = True 
@@ -69,17 +75,24 @@ class Car:
     def draw(self, surface):
         draw_x = self.current_node.get_render_x()
         draw_y = self.current_node.get_render_y()
-        length = 40
-        width = 20
+        length = 80
+        width = 4
+        explosion_radius = 20
 
         if self.is_active:
             # Draw a line pointing in self.direction from draw_x, draw_y
-            pygame.draw.line(surface, (0, 0, 0), (draw_x, draw_y), (draw_x + self.facing_direction[0] * length, draw_y + self.facing_direction[1] * length), width)
+            start_line = (draw_x, draw_y)
+            end_line = (draw_x + self.facing_direction[0] * length, draw_y + self.facing_direction[1] * length)
+            draw_line_as_polygon(surface, start_line, end_line, width, (0, 0, 0), aa=False)
 
             # Draw a smaller skinny line not quite as long to show the direction
-            pygame.draw.line(surface, (255, 0, 0), (draw_x, draw_y), (draw_x + self.facing_direction[0] * length * 0.8, draw_y + self.facing_direction[1] * length * 0.8), 1)
+            pygame.draw.line(surface, (255, 0, 255), (draw_x, draw_y), (draw_x + self.facing_direction[0] * length * 0.5, draw_y + self.facing_direction[1] * length * 0.5), 1)
 
         if self.crashed:
             # Draw a circle with red on the outside, yellow on the inside
-            pygame.draw.circle(surface, (255, 0, 0), (draw_x, draw_y), width)
-            pygame.draw.circle(surface, (255, 255, 0), (draw_x, draw_y), width - 5)
+            pygame.draw.circle(surface, (255, 0, 0), (draw_x, draw_y), explosion_radius)
+            pygame.draw.circle(surface, (255, 255, 0), (draw_x, draw_y), explosion_radius - 5)
+
+            # Draw a line to my crash partner
+            if self.other:
+                pygame.draw.line(surface, (255, 0, 0), (draw_x, draw_y), (self.other.current_node.get_render_x(), self.other.current_node.get_render_y()), 5)

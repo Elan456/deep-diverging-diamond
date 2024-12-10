@@ -70,7 +70,7 @@ class Router:
                 dx = s_end.x - s_start.x
                 dy = s_end.y - s_start.y
                 
-                num_sections = int(math.sqrt(dx ** 2 + dy ** 2) * 2)
+                num_sections = int(math.sqrt(dx ** 2 + dy ** 2) * 4)  # 4 section per unit of distance
                 for j in range(num_sections):
                     section = OccupationSection(s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections)
                     if (s_start.x + dx * j / num_sections, s_start.y + dy * j / num_sections) in lights:
@@ -93,7 +93,7 @@ class Router:
                     for section1 in sections1:
                         for section2 in sections2:
                             distance = math.sqrt((section1.x - section2.x) ** 2 + (section1.y - section2.y) ** 2)
-                            if distance < .3:
+                            if distance < .7:
                                 section1.add_overlap(section2)
                                 section2.add_overlap(section1)
 

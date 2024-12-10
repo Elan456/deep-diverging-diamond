@@ -1,5 +1,6 @@
 import pygame 
 import numpy as np 
+from .utils import angle_difference
 
 class Node:
     def __init__(self, x, y):
@@ -50,6 +51,8 @@ class OccupationSection:
     - Don't enter the section if it's red lighted
     - Don't check for cars heading in a perpendicular direction (Assue we don't check for cross-traffic)
     """
+    width = 12
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -73,28 +76,29 @@ class OccupationSection:
         if self.is_light and self.red_light:
             return False
 
-        def angle_difference(angle1, angle2):
-            diff = abs(angle1 - angle2)
-            return min(diff, 360 - diff)
-
         # If the section is already occupied, then no one can enter
         if self.occupant is not None:
             # Check if the occupant and the car's directions are within 60 degrees of each other (merging or same direction)
             if angle_difference(self.occupant.facing_angle, car.facing_angle) != 90:
                 return False
 
+        return True 
+
+    def check_collision(self):
+        """
+        Checks if my occupant is in collison with any of my overlaps and triggers crash
+        """
+
+        if not self.occupant:
+            return
         
         # Check if any of the overlapping sections are occupied
         for overlap in self.overlaps:
             if overlap.occupant is not None:
-                if angle_difference(overlap.occupant.facing_angle, car.facing_angle) == 90:
+                if angle_difference(overlap.occupant.facing_angle, self.occupant.facing_angle) == 90:
                     print("CRASH")
-                    car.crash()
-                    overlap.occupant.crash()
-                    return False
-
-            
-        return True
+                    self.occupant.crash(overlap.occupant)
+                    overlap.occupant.crash(self.occupant)
 
     def get_render_x(self):
         return self.x * 50 + 100
@@ -104,9 +108,9 @@ class OccupationSection:
 
     def draw(self, surface):
         if self.is_light:
-            pygame.draw.rect(surface, (0, 255, 0), (self.x * 50 + 100, self.y * 50 + 100, 25, 25), 1)
+            pygame.draw.rect(surface, (0, 255, 0), (self.x * 50 + 100, self.y * 50 + 100, self.width, self.width), 1)
         else:
-            pygame.draw.rect(surface, (255, 0, 0), (self.x * 50 + 100, self.y * 50 + 100, 25, 25), 1)
+            pygame.draw.rect(surface, (255, 0, 0), (self.x * 50 + 100, self.y * 50 + 100, self.width, self.width), 1)
 
         for overlap in self.overlaps:
             # Draw a big circle on the overlap

@@ -18,6 +18,9 @@ class DDI:
             with open(inputFile, newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
+                    # Skip empty rows
+                    if not row[0] or not row[1]:
+                        continue
                     self.cars.append(Car(self.router, routes[int(row[0])][0], routes[int(row[0])][1], int(row[1]), self))
         else:
             self.cars = [
@@ -51,6 +54,10 @@ class DDI:
     def update(self):
         for car in self.cars:
             car.update()
+        
+        for os in self.router.all_occupation_sections:
+            os.check_collision()
+
         self.toggle_lights()
         # Cull cars that are done
         self.cars = [car for car in self.cars if not car.done]
