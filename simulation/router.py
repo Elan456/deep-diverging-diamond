@@ -92,9 +92,8 @@ class Router:
                 if key1 != key2:
                     for section1 in sections1:
                         for section2 in sections2:
-                            rect1 = pygame.Rect(section1.x * 50 + 100, section1.y * 50 + 100, 25, 25)
-                            rect2 = pygame.Rect(section2.x * 50 + 100, section2.y * 50 + 100, 25, 25)
-                            if rect1.colliderect(rect2):
+                            distance = math.sqrt((section1.x - section2.x) ** 2 + (section1.y - section2.y) ** 2)
+                            if distance < .3:
                                 section1.add_overlap(section2)
                                 section2.add_overlap(section1)
 
@@ -192,10 +191,6 @@ class Router:
             screen.blit(text, (x, y))
 
 
-
-
-
-
     def draw_routes(self, screen):
         """
         Draw the routes on the screen
@@ -211,7 +206,7 @@ class Router:
                 pygame.draw.line(screen, (50, 50, 50),
                                 (nodes[i].get_render_x(), nodes[i].get_render_y()), 
                                 (nodes[i + 1].get_render_x(), nodes[i + 1].get_render_y()), 5)
-                
+                # Draw the occupation zone
                 nodes[i].draw(screen)
                 
 

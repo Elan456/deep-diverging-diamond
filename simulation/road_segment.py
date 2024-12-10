@@ -89,8 +89,8 @@ class OccupationSection:
             if overlap.occupant is not None:
                 if angle_difference(overlap.occupant.facing_angle, car.facing_angle) == 90:
                     print("CRASH")
-                    car.finish(True)
-                    overlap.occupant.finish(True)
+                    car.crash()
+                    overlap.occupant.crash()
                     return False
 
             
@@ -107,6 +107,10 @@ class OccupationSection:
             pygame.draw.rect(surface, (0, 255, 0), (self.x * 50 + 100, self.y * 50 + 100, 25, 25), 1)
         else:
             pygame.draw.rect(surface, (255, 0, 0), (self.x * 50 + 100, self.y * 50 + 100, 25, 25), 1)
+
+        for overlap in self.overlaps:
+            # Draw a big circle on the overlap
+            pygame.draw.circle(surface, (255, 255, 0), (overlap.x * 50 + 100 + 12, overlap.y * 50 + 100 + 12), 5)
     
     def toggle_light(self):
         if self.is_light:

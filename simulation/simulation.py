@@ -21,12 +21,20 @@ class Simulation:
 
     def run(self):
         if self.render:
+            paused = False 
+
             while self.running:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         self.running = False
-
-                self.ddi.update()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_SPACE:
+                            paused = not paused
+                        if event.key == pygame.K_RIGHT and paused:
+                            self.ddi.update()
+                        
+                if not paused:
+                    self.ddi.update()
 
                 self.screen.fill((128, 128, 128))
                 self.ddi.draw(self.screen)
@@ -34,4 +42,6 @@ class Simulation:
                 self.clock.tick(5)
                 if self.ddi.is_done():
                     self.running = False
+
+                
         self.ddi.final_stats()

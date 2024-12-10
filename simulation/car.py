@@ -18,10 +18,14 @@ class Car:
         self.route = self.router.get_route(start_node, end_node)  # List of nodes to drive to
         self.route_index = 0  # The index of the current node in the route we are on.
         self.ending_tick = 0
+        self.crashed = False 
 
-    def finish(self, crash=False):
+    def crash(self):
+        self.crashed = True 
+
+    def finish(self):
         self.done = True 
-        self.ending_tick = self.tick if not crash else math.inf
+        self.ending_tick = self.tick if not self.crashed else math.inf
         # Remove myself from the occupation map
         if self.ddi.occupations[(self.current_node.x, self.current_node.y)].occupant == self:
             self.ddi.occupations[(self.current_node.x, self.current_node.y)].occupant = None
@@ -34,6 +38,10 @@ class Car:
 
         self.tick += 1
         self.current_node = self.route[self.route_index]
+
+        if self.crashed:
+            self.finish()
+            return
 
         if self.route_index == len(self.route) - 1:
             self.finish()
@@ -71,4 +79,7 @@ class Car:
             # Draw a smaller skinny line not quite as long to show the direction
             pygame.draw.line(surface, (255, 0, 0), (draw_x, draw_y), (draw_x + self.facing_direction[0] * length * 0.8, draw_y + self.facing_direction[1] * length * 0.8), 1)
 
-
+        if self.crashed:
+            # Draw a circle with red on the outside, yellow on the inside
+            pygame.draw.circle(surface, (255, 0, 0), (draw_x, draw_y), width)
+            pygame.draw.circle(surface, (255, 255, 0), (draw_x, draw_y), width - 5)
