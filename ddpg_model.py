@@ -16,14 +16,19 @@ class ActorNetwork(nn.Module):
         self.fc3 = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
+        self.softmax = nn.Softmax(dim=-1)
+        
 
     def forward(self, x):
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
-        x = self.tanh(self.fc3(x))
-        return (x + 1) / 2  # Scale output to [0, 1]
+        x = self.softmax(self.fc3(x))
+        # Scale output to [0, 1]
+        x = (x + 1) / 2
+        return x
 
 # Define the critic network
+"""
 class CriticNetwork(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_dim=128):
         super(CriticNetwork, self).__init__()
@@ -40,11 +45,11 @@ class CriticNetwork(nn.Module):
 
     def __len__(self):
         return len(self.buffer)
-
+"""
 gamma = 0.99  # Discount factor
 
 sim = Simulation()
-
+"""
 def train_ddpg_episode(actor, critic, target_actor, target_critic, actor_optimizer, critic_optimizer, states, actions, reward, gamma=0.99, tau=0.005):
   
   total_reward = torch.tensor([reward], dtype=torch.float)
@@ -56,12 +61,12 @@ def train_ddpg_episode(actor, critic, target_actor, target_critic, actor_optimiz
     action = action.unsqueeze(0) if action.dim() == 1 else action
 
 
-    #critic update
-    q_value = critic(state, action)
-    critic_loss = nn.MSELoss()(q_value, total_reward.unsqueeze(0))
-    critic_optimizer.zero_grad()
-    critic_loss.backward()
-    critic_optimizer.step()
+    # #critic update
+    # q_value = critic(state, action)
+    # critic_loss = nn.MSELoss()(q_value, total_reward.unsqueeze(0))
+    # critic_optimizer.zero_grad()
+    # critic_loss.backward()
+    # critic_optimizer.step()
 
     #actor update
     actor_loss = -critic(state, actor(state)).mean()
@@ -77,8 +82,23 @@ def train_ddpg_episode(actor, critic, target_actor, target_critic, actor_optimiz
   for param, target_param in zip(critic.parameters(), target_critic.parameters()):
       target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
   return actor, critic, target_actor, target_critic
-def simulation_episode(actor, cars=None, inputFile=None):
-  sim = Simulation()
+"""
+
+
+def compute_policy_gradient(states, actions, reward):
+  policy_gradient = []
+  for state, action in zip(states, actions):
+      state = torch.tensor(state.induction_plate_last_activated, dtype=torch.float)
+      action = torch.tensor(action, dtype=torch.long)
+      log_prob = torch.log(actor(state)[action])
+
+      grad = -log_prob * reward
+      policy_gradient.append(grad)
+
+  return policy_gradient
+
+
+def simulation_episode(actor, sim, cars=None, inputFile=None):
   if cars:
     sim.set_scenario(cars=cars)
   elif inputFile:
@@ -93,19 +113,20 @@ def simulation_episode(actor, cars=None, inputFile=None):
   done = state.all_cars_done
   count = 0
   while not done and count < 1000:
-    action = actor(torch.tensor(state.induction_plate_last_activated, dtype=torch.float))
-    actions.append(action)
-    sim.apply_action(action)
+    action_probs = actor(torch.tensor(state.induction_plate_last_activated, dtype=torch.float))
+    action_probs = np.array(action_probs.detach().numpy())
+    selected_action = np.random.binomial(1, action_probs)
+    actions.append(selected_action)
+    sim.apply_action(selected_action)
     sim.step()
     state = sim.get_state()
     states.append(state)
     count += 1
     done = state.all_cars_done
   average_time = sim.get_average_time()
-  # Take the inverse of the reward
-  print(f"Average time for cars: {average_time} for episode with {len(states)} steps")
-  # Create a reward that is the inverse of the average time
-  reward = 1 / average_time  
+  # print(f"Average time for cars: {average_time} for episode with {len(states)} steps")
+  # Create a reward that is the negative of the average time
+  reward = -average_time  
   return states, actions, reward
 
 # List all files in the ./sims folder
@@ -118,24 +139,38 @@ action_dim = 12
 hidden_dim = 128
 # Define the actor networks
 actor = ActorNetwork(state_dim, action_dim, hidden_dim)
-target_actor = ActorNetwork(state_dim, action_dim, hidden_dim)
-target_actor.load_state_dict(actor.state_dict())
 
-# Define the critic networks
-critic = CriticNetwork(state_dim, action_dim, hidden_dim)
-target_critic = CriticNetwork(state_dim, action_dim, hidden_dim)
-target_critic.load_state_dict(critic.state_dict())
 
 # Define the optimizers
 actor_optimizer = optim.Adam(actor.parameters(), lr=1e-4)
-critic_optimizer = optim.Adam(critic.parameters(), lr=1e-3)
+total_reward = 0
+cars = []
+for _ in range(100):
+    cars.append((random.randint(0, 15), random.randint(0, 100)))
+sim = Simulation()
 for i in range(100):
-  cars = []
-  for _ in range(100):
-      cars.append((random.randint(0, 15), random.randint(0, 100)))
-  states, actions, reward = simulation_episode(actor, cars=cars, inputFile=None)
+  states, actions, reward = simulation_episode(actor, sim, cars=cars, inputFile=None)
+  total_reward += reward
+  policy_grad = compute_policy_gradient(states, actions, reward)
+  actor_optimizer.zero_grad()
+  for param in actor.parameters():
+    param.grad = torch.zeros_like(param)
+  for grad in policy_grad:
+    for param, g in zip(actor.parameters(), grad):
+      param.grad += g
+  # Learning rate
+  lr = 0.01 
+  # Manually update parameters
+  for param in actor.parameters():
+    param.data -= lr * param.grad
 
-  actor, critic, target_actor, target_critic = train_ddpg_episode(
-    actor, critic, target_actor, target_critic, actor_optimizer, critic_optimizer, states, actions, reward
-  )  # Example number of episodes
+  # Clear gradients after updating
+  for param in actor.parameters():
+    param.grad = None
+  actor_optimizer.step()
+
+print(f"Average reward: {total_reward/100}")
+  # actor, critic, target_actor, target_critic = train_ddpg_episode(
+  #   actor, critic, target_actor, target_critic, actor_optimizer, critic_optimizer, states, actions, reward
+  # )  # Example number of episodes
 
