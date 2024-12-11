@@ -75,6 +75,8 @@ class Car:
             self.ddi.occupations[(self.next_node.x, self.next_node.y)].occupant = self
             self.ddi.occupations[(self.current_node.x, self.current_node.y)].occupant = None
 
+        self.ending_tick = self.tick
+
 
     def draw(self, surface):
         draw_x = self.current_node.get_render_x()

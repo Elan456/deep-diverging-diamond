@@ -63,6 +63,17 @@ class DDI:
         text = block_font.render("Light", True, (255, 255, 255))
         screen.blit(text, (850, 50))
 
+        # Current tick
+        try:
+            text = block_font.render("Tick: " + str(self.cars[0].tick), True, (255, 255, 255))
+            screen.blit(text, (900, 700))
+
+            # Number of cars
+            text = block_font.render("Cars: " + str(len(self.cars)), True, (255, 255, 255))
+            screen.blit(text, (900, 750))
+        except:
+            pass
+
     def get_induction_plate_states(self):
         """
         Returns a list of 1 and 0s representing if each induction plate is occupied or not 
@@ -111,10 +122,14 @@ class DDI:
         car_count = 0
         for car in self.all_cars:
             car_count += 1
-            if car.done:
-                total_time += car.ending_tick - car.spawn_tick
-            if car.crashed or not car.done:
+            if car.crashed:
                 total_time += 10000  # Penalize cars that didn't finish
+            else:
+                t = car.ending_tick - car.spawn_tick
+                if not car.done:
+                    t *= 2
+                total_time += t
+            
 
         return total_time / car_count
     

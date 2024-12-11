@@ -12,13 +12,15 @@ class Simulation:
         def __init__(self, current_tick, current_induction_plate_states,
                       induction_plate_last_activated,
                         crash_occurred,
-                        all_cars_done):
+                        all_cars_done, clock_signal):
 
             self.current_tick = current_tick  # The current tick of the simulation
             self.current_induction_plate_states = current_induction_plate_states  # A list of 1s and 0s representing if each induction plate is occupied or not
             self.induction_plate_last_activated = induction_plate_last_activated  # A list of how many ticks ago the induction plates were last activated
             self.crash_occurred = crash_occurred  # Did a crash occur this tick?
             self.all_cars_done = all_cars_done  # Are all the cars done?
+
+            self.induction_plate_last_activated_with_clock_signal = induction_plate_last_activated + [clock_signal]
 
     @staticmethod
     def read_input_file(inputFile):
@@ -35,8 +37,9 @@ class Simulation:
                 cars.append((int(row[0]), int(row[1])))
         return cars
 
-    def __init__(self, render=False):
+    def __init__(self, render=False, render_frequency=5):
         self.render = render
+        self.render_frequency = render_frequency
 
         if self.render:
             self.screen = pygame.display.set_mode((1200, 800))
@@ -74,12 +77,17 @@ class Simulation:
         self.ddi = DDI(self.scenario)
         self.induction_times = [100] * 12
         self.tick = 0
+        self.clock_signal = 0
 
-    def step(self):
+    def step(self, episode=0):
         """
         Steps the simulation forward one tick
+
+        Pass in the episode number, so the sim knows when to render
         """
         self.tick += 1
+        if self.tick % 10 == 0:
+            self.clock_signal = 1 - self.clock_signal
         self.ddi.update()
         if self.ddi.is_done():
             self.running = False
@@ -91,6 +99,19 @@ class Simulation:
             else:
                 self.induction_times[i] += 1
 
+        if self.render and episode % self.render_frequency == 0:
+            self.screen.fill((128, 128, 128))
+            self.ddi.draw(self.screen)
+            pygame.display.flip()
+            self.clock.tick(15)
+
+        if self.render:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+            
+           
+
     def get_state(self) -> List[int]:
         """
         Returns the current state vector of the simulation
@@ -101,7 +122,7 @@ class Simulation:
         crash_occurred = self.ddi.get_crash_just_occurred()
         return self.State(self.tick, 
             induction_plate_states,
-              self.induction_times, crash_occurred, self.ddi.is_done())
+              self.induction_times, crash_occurred, self.ddi.is_done(), self.clock_signal)
 
     def get_average_time(self):
         """
