@@ -14,7 +14,7 @@ block_font = pygame.font.Font(None, 36)
 
 class DDI:
     def __init__(self, scenario):
-        print("Scenario: ", scenario)
+        # print("Scenario: ", scenario)
         self.router = Router(self, road_segments, routes)
         self.cars = []
         for s_car in scenario:  # s_car is a tuple of (route index, start time)

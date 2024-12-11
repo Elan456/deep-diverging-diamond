@@ -103,7 +103,7 @@ class OccupationSection:
         for overlap in self.overlaps:
             if overlap.occupant is not None:
                 if angle_difference(overlap.occupant.facing_angle, self.occupant.facing_angle) == 90:
-                    print("CRASH")
+                    # print("CRASH")
                     self.occupant.crash(overlap.occupant)
                     overlap.occupant.crash(self.occupant)
                     crash_occurred = True

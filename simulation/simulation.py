@@ -97,9 +97,9 @@ class Simulation:
         
         Represented as a list of 1 and 0 for each induction plate 
         """
-        induction_plate_states = self.ddi.get_induction_plates_states()
+        induction_plate_states = self.ddi.get_induction_plate_states()
         crash_occurred = self.ddi.get_crash_just_occurred()
-        return self.State(self.current_tick, 
+        return self.State(self.tick, 
             induction_plate_states,
               self.induction_times, crash_occurred, self.ddi.is_done())
 
