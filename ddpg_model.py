@@ -143,34 +143,32 @@ actor = ActorNetwork(state_dim, action_dim, hidden_dim)
 
 # Define the optimizers
 actor_optimizer = optim.Adam(actor.parameters(), lr=1e-4)
-total_reward = 0
 cars = []
-for _ in range(100):
+for _ in range(10):
     cars.append((random.randint(0, 15), random.randint(0, 100)))
+
 sim = Simulation()
+def train(actor):
+  total_reward = 0
+  
+  for i in range(10):
+    
+    states, actions, reward = simulation_episode(actor, sim, cars=cars, inputFile=None)
+    total_reward += reward
+    policy_grad = compute_policy_gradient(states, actions, reward)
+    actor_optimizer.zero_grad()
+    for param in actor.parameters():
+      param.grad = torch.zeros_like(param)
+    for grad in policy_grad:
+      for param, g in zip(actor.parameters(), grad):
+        param.grad += g
+    actor_optimizer.step()
+
+  print(f"Average reward: {total_reward/10}")
+
 for i in range(100):
-  states, actions, reward = simulation_episode(actor, sim, cars=cars, inputFile=None)
-  total_reward += reward
-  policy_grad = compute_policy_gradient(states, actions, reward)
-  actor_optimizer.zero_grad()
-  for param in actor.parameters():
-    param.grad = torch.zeros_like(param)
-  for grad in policy_grad:
-    for param, g in zip(actor.parameters(), grad):
-      param.grad += g
-  # Learning rate
-  lr = 0.01 
-  # Manually update parameters
-  for param in actor.parameters():
-    param.data -= lr * param.grad
+  train(actor)
 
-  # Clear gradients after updating
-  for param in actor.parameters():
-    param.grad = None
-  actor_optimizer.step()
 
-print(f"Average reward: {total_reward/100}")
-  # actor, critic, target_actor, target_critic = train_ddpg_episode(
-  #   actor, critic, target_actor, target_critic, actor_optimizer, critic_optimizer, states, actions, reward
-  # )  # Example number of episodes
+torch.save(actor.state_dict(), "model.pth")
 
