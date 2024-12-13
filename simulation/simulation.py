@@ -97,7 +97,8 @@ class Simulation:
             if induction_plate_states[i] == 1:
                 self.induction_times[i] = 0
             else:
-                self.induction_times[i] += 1
+                if self.induction_times[i] < 100:
+                    self.induction_times[i] += 1
 
         if self.render and episode % self.render_frequency == 0:
             self.screen.fill((128, 128, 128))

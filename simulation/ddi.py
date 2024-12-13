@@ -127,7 +127,7 @@ class DDI:
             else:
                 t = car.ending_tick - car.spawn_tick
                 if not car.done:
-                    t *= 2
+                    t *= 10
                 total_time += t
             
 
