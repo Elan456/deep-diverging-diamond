@@ -16,84 +16,30 @@ class ActorNetwork(nn.Module):
         self.fc3 = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
-        self.softmax = nn.Softmax(dim=-1)
         
 
     def forward(self, x):
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
-        x = self.softmax(self.fc3(x))
+        x = self.relu(self.fc3(x))
         # Scale output to [0, 1]
         x = (x + 1) / 2
         return x
 
-# Define the critic network
-"""
-class CriticNetwork(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_dim=128):
-        super(CriticNetwork, self).__init__()
-        self.fc1 = nn.Linear(state_dim + action_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, 1)
-        self.relu = nn.ReLU()
-
-    def forward(self, state, action):
-        x = torch.cat([state, action], dim=1)
-        x = self.relu(self.fc1(x))
-        x = self.relu(self.fc2(x))
-        return self.fc3(x)
-
-    def __len__(self):
-        return len(self.buffer)
-"""
-gamma = 0.99  # Discount factor
-
-sim = Simulation()
-"""
-def train_ddpg_episode(actor, critic, target_actor, target_critic, actor_optimizer, critic_optimizer, states, actions, reward, gamma=0.99, tau=0.005):
-  
-  total_reward = torch.tensor([reward], dtype=torch.float)
-
-  for state, action in zip(states, actions):
-    state = torch.tensor(state.induction_plate_last_activated, dtype=torch.float)
-    action = torch.tensor(action, dtype=torch.float)
-    state = state.unsqueeze(0) if state.dim() == 1 else state
-    action = action.unsqueeze(0) if action.dim() == 1 else action
-
-
-    # #critic update
-    # q_value = critic(state, action)
-    # critic_loss = nn.MSELoss()(q_value, total_reward.unsqueeze(0))
-    # critic_optimizer.zero_grad()
-    # critic_loss.backward()
-    # critic_optimizer.step()
-
-    #actor update
-    actor_loss = -critic(state, actor(state)).mean()
-    actor_optimizer.zero_grad()
-    actor_loss.backward()
-    actor_optimizer.step()
-
-
-  # Update the target networks
-  for param, target_param in zip(actor.parameters(), target_actor.parameters()):
-      target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
-
-  for param, target_param in zip(critic.parameters(), target_critic.parameters()):
-      target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
-  return actor, critic, target_actor, target_critic
-"""
 
 def compute_policy_gradient(states, actions, reward, rewards):
   policy_gradient = []
-  for state, action, R in zip(states, actions, rewards):
-      state = torch.tensor(state.induction_plate_last_activated, dtype=torch.float)
+  gamma = 0.99
+  last_tick = states[-1].current_tick
+  for state, action, instant_reward in zip(states, actions, rewards):
+      current_tick = state.current_tick
+      state = torch.tensor(state.induction_plate_last_activated + state.current_induction_plate_states, dtype=torch.float)
       action = torch.tensor(action, dtype=torch.long)
-      log_prob = torch.log(actor(state)[action])
-
-      grad = -log_prob * (reward + R)
+      log_prob = torch.log(actor(state)[action]  + 1e-8)
+      grad = -log_prob * (reward * (gamma ** (last_tick - current_tick)) + instant_reward)
       policy_gradient.append(grad)
-
+      
+  print("Gradients", policy_gradient)
   return policy_gradient
 
 
@@ -113,11 +59,13 @@ def simulation_episode(actor, sim, cars=None, inputFile=None, episode_number=Non
   done = state.all_cars_done
   count = 0
   crash_count = 0
-  while not done and count < 10000:
-    action_probs = actor(torch.tensor(state.induction_plate_last_activated, dtype=torch.float))
+  while not done and count < 300:
+    # print(state.current_induction_plate_states + state.induction_plate_last_activated)
+    action_probs = actor(torch.tensor(state.induction_plate_last_activated + state.current_induction_plate_states, dtype=torch.float))
     action_probs = np.array(action_probs.detach().numpy())
-    selected_action = np.random.binomial(1, action_probs)
-    actions.append(selected_action)
+    # print("Actions probs", action_probs)
+    selected_action = [1 if prob > 0.5 else 0 for prob in action_probs]
+    actions.append(action_probs)
     sim.apply_action(selected_action)
     if episode_number is not None:
       sim.step(episode_number)
@@ -125,13 +73,11 @@ def simulation_episode(actor, sim, cars=None, inputFile=None, episode_number=Non
       sim.step()
     state = sim.get_state()
     states.append(state)
+    rewards.append(0)
     if state.crash_occurred:
       # print("Crash occurred")
       crash_count += 1
-      rewards.append(10000)
-      rewards[-5:] = [r + 10000 for r in rewards[-5:]]
-    else:
-      rewards.append(0)
+      rewards[-8:-2] = [r - 300 for r in rewards[-8:-2]]
     count += 1
     done = state.all_cars_done
   average_time = sim.get_average_time()
@@ -143,10 +89,12 @@ def simulation_episode(actor, sim, cars=None, inputFile=None, episode_number=Non
 
 def train(actor, sim, cars=None, episode_count=10):
   total_reward = 0
-  actor_optimizer = optim.Adam(actor.parameters(), lr=0.001)
+  actor_optimizer = optim.Adam(actor.parameters(), lr=0.01)
+  to_print = False
   for i in range(episode_count):
-    
-    states, actions, reward, rewards = simulation_episode(actor, sim, cars=cars, episode_number=i)
+
+    to_print = True if i % 10 == 0 else False
+    states, actions, reward, rewards = simulation_episode(actor, sim, cars=cars, episode_number=i, to_print=to_print)
     # print(f"Episode {i+1} Reward: {reward}")
     total_reward += reward
     policy_grad = compute_policy_gradient(states, actions, reward, rewards)
@@ -190,27 +138,24 @@ def train_one_epoch(actor, sim, car_count, episode_count):
   train_with_cars(actor, sim, car_count, episode_count)
 
 if __name__ == "__main__":
-  sim = Simulation()
+  sim = Simulation(render=True, render_frequency=10)
   
   # Initialize networks and optimizers
-  state_dim = 12
+  state_dim = 24
   action_dim = 12
-  hidden_dim = 128
-  create_and_save_actor(state_dim, action_dim, hidden_dim, "actor.pth")
-  car_count = 10
-
-  actor = load_actor_train("actor.pth", state_dim, action_dim, hidden_dim)
+  hidden_dim = 24
+  espisode_count = 10
+  # create_and_save_actor(state_dim, action_dim, hidden_dim, "actor1.pth")
+  car_count = 50 
   cars = []
-  
-  for i in range(10):
-    train_one_epoch(actor, sim, car_count, 50)
-    print(f"Epoch {i+1} trained with {car_count} cars:")
-    for _ in range(car_count):
+  for _ in range(car_count):
       cars.append((random.randint(0, 15), random.randint(0, 100)))
-    simulation_episode(actor, sim, cars=cars, episode_number=1, to_print=True)
-    car_count += 10
+  actor = load_actor_train("actor1.pth", state_dim, action_dim, hidden_dim)
 
-  update_actor_file(actor, "actor.pth")
+  for i in range(30):
+    train_one_epoch(actor, sim, car_count, espisode_count)
+    
+  # print([param for param in actor.parameters()])
   sim = Simulation(render=True, render_frequency=1)
   
   simulation_episode(actor, sim, cars=cars, episode_number=1, to_print=True)  

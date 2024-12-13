@@ -1,6 +1,7 @@
 """
 Diverging Diamond Interchange (DDI) simulation
 """
+import math
 import random
 import pygame 
 from .road_segment import RoadSegment, Node
@@ -85,7 +86,7 @@ class DDI:
             if car.at_light:
                 induction_plate_states[ld.LIGHTS.index((car.next_node.x, car.next_node.y))] = 1
 
-        return induction_plate_states\
+        return induction_plate_states
         
     def get_crash_just_occurred(self):
         """
@@ -122,11 +123,11 @@ class DDI:
         car_count = 0
         for car in self.all_cars:
             if car.crashed:
-                total_time += 10000
+                total_time += 0
             car_count += 1
             t = car.ending_tick - car.spawn_tick
             if not car.done:
-                t *= 2
+                t *= 4
             total_time += t
             
         return total_time / car_count

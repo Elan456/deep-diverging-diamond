@@ -75,7 +75,7 @@ class Simulation:
         Keeping the current scenario, reset the simulation
         """
         self.ddi = DDI(self.scenario)
-        self.induction_times = [100] * 12
+        self.induction_times = [1] * 12
         self.tick = 0
         self.clock_signal = 0
 
@@ -94,16 +94,18 @@ class Simulation:
 
         induction_plate_states = self.ddi.get_induction_plate_states()
         for i in range(12):
-            if induction_plate_states[i] == 1:
+            if induction_plate_states[i] == 1 and self.ddi.light_states[i] == 1:
                 self.induction_times[i] = 0
             else:
-                self.induction_times[i] += 1
+                if self.induction_times[i] < 1:
+                    self.induction_times[i] += 0.01
+
 
         if self.render and episode % self.render_frequency == 0:
             self.screen.fill((128, 128, 128))
             self.ddi.draw(self.screen)
             pygame.display.flip()
-            self.clock.tick(15)
+            self.clock.tick(25)
 
         if self.render:
             for event in pygame.event.get():
