@@ -121,7 +121,6 @@ class DDI:
         total_time = 0
         car_count = 0
         for car in self.all_cars:
-            car_count += 1
             if car.crashed:
                 total_time += 10000  # Penalize cars that didn't finish
             else:
