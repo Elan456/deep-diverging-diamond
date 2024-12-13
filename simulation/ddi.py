@@ -121,16 +121,14 @@ class DDI:
         total_time = 0
         car_count = 0
         for car in self.all_cars:
-            car_count += 1
             if car.crashed:
-                total_time += 10000  # Penalize cars that didn't finish
-            else:
-                t = car.ending_tick - car.spawn_tick
-                if not car.done:
-                    t *= 2
-                total_time += t
+                total_time += 10000
+            car_count += 1
+            t = car.ending_tick - car.spawn_tick
+            if not car.done:
+                t *= 2
+            total_time += t
             
-
         return total_time / car_count
     
     def final_stats(self):
