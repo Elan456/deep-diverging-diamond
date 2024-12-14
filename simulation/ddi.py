@@ -9,7 +9,6 @@ from .lane_defs import road_segments, routes
 from . import lane_defs as ld
 from .router import Router
 from .car import Car
-from ..model_variables import model_variables as mv
 
 block_font = pygame.font.Font(None, 36)
 
@@ -123,7 +122,7 @@ class DDI:
         car_count = 0
         for car in self.all_cars:
             if car.crashed:
-                total_time += mv.TOTAL_CRASH_PENALTY
+                total_time += 0
             car_count += 1
             t = car.ending_tick - car.spawn_tick
             if not car.done:
