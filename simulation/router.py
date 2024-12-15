@@ -210,23 +210,23 @@ class Router:
                 
 
 
-        display_route = routes[int(self.render_tick / 100) % len(routes)]
+        # display_route = routes[int(self.render_tick / 100) % len(routes)]
 
-        nodes = self.full_routes[display_route]
+        # nodes = self.full_routes[display_route]
 
-        for i in range(len(nodes) - 1):
-            pygame.draw.line(screen, (0, 100, 0),
-                            (nodes[i].get_render_x(), nodes[i].get_render_y()), 
-                            (nodes[i + 1].get_render_x(), nodes[i + 1].get_render_y()), 5)
+        # for i in range(len(nodes) - 1):
+        #     pygame.draw.line(screen, (0, 100, 0),
+        #                     (nodes[i].get_render_x(), nodes[i].get_render_y()), 
+        #                     (nodes[i + 1].get_render_x(), nodes[i + 1].get_render_y()), 5)
             
            
             
-        # Draw a green circle at the start and a red circle at the end
-        pygame.draw.circle(screen, (0, 255, 0), 
-                            (nodes[0].get_render_x(), nodes[0].get_render_y()), 5)
+        # # Draw a green circle at the start and a red circle at the end
+        # pygame.draw.circle(screen, (0, 255, 0), 
+        #                     (nodes[0].get_render_x(), nodes[0].get_render_y()), 5)
         
-        pygame.draw.circle(screen, (255, 0, 0),
-                            (nodes[-1].get_render_x(), nodes[-1].get_render_y()), 5)
+        # pygame.draw.circle(screen, (255, 0, 0),
+        #                     (nodes[-1].get_render_x(), nodes[-1].get_render_y()), 5)
         
         self.draw_route_labels(screen)
             
